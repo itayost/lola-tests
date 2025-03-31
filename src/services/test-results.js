@@ -1,52 +1,54 @@
-import { 
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  orderBy 
-} from 'firebase/firestore';
+// services/test-results.js
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 
 const RESULTS_COLLECTION = 'test-results';
 
 export const saveTestResult = async (resultData) => {
   try {
-    // Ensure we're working with a plain object that Firestore can handle
-    const cleanedData = JSON.parse(JSON.stringify({
-      ...resultData,
-      timestamp: new Date().getTime() // Add a timestamp for sorting
-    }));
+    // Basic data cleanup
+    const data = {
+      waiterId: resultData.waiterId,
+      waiterName: resultData.waiterName,
+      employeeId: resultData.employeeId,
+      score: Number(resultData.score),
+      correctAnswers: Number(resultData.correctAnswers),
+      totalQuestions: Number(resultData.totalQuestions),
+      timestamp: Date.now(),
+      date: new Date().toISOString().split('T')[0]
+    };
 
-    console.log('Saving to Firestore:', cleanedData);
+    // Log the attempt
+    console.log('Attempting to save test result:', data);
 
-    const docRef = await addDoc(collection(db, RESULTS_COLLECTION), cleanedData);
-    console.log('Document written with ID:', docRef.id);
+    // Try to save
+    const docRef = await addDoc(collection(db, RESULTS_COLLECTION), data);
+    console.log('Test result saved successfully with ID:', docRef.id);
     return docRef.id;
+
   } catch (error) {
-    console.error('Error in saveTestResult:', error);
-    throw new Error('Error saving test result: ' + error.message);
+    // Log the full error
+    console.error('Error saving test result:', {
+      code: error.code,
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
   }
 };
 
-export const getTestResults = async (userName = null) => {
+export const getTestResults = async () => {
   try {
-    let q = query(
-      collection(db, RESULTS_COLLECTION),
-      orderBy('timestamp', 'desc')
-    );
-
-    if (userName) {
-      q = query(q, where('userName', '==', userName));
-    }
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    console.log("Fetching test results...");
+    const querySnapshot = await getDocs(collection(db, RESULTS_COLLECTION));
+    const results = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+    console.log("Test results fetched:", results);
+    return results;
   } catch (error) {
-    console.error('Error in getTestResults:', error);
-    throw new Error('Error fetching test results: ' + error.message);
+    console.error('Error fetching results:', error);
+    return []; // Return empty array on error
   }
 };

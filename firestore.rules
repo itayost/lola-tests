@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Allow admins to read all users, users to read their own data
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      // Allow admins to create/update/delete users
+      allow create: if request.auth != null && (isAdmin() || !exists(/databases/$(database)/documents/users/$(request.auth.uid)));
+      allow update, delete: if request.auth != null && isAdmin();
+    }
+    
+    // Questions collection rules
+    match /questions/{questionId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
+    }
+    
+    // Test results collection rules
+    match /test-results/{resultId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.userId || isAdmin()
+      );
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && isAdmin();
+    }
+  }
+}

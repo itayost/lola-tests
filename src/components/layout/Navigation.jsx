@@ -1,105 +1,35 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Input } from '../ui/input';
-import { signIn, signOut } from '../../services/auth';
+import { ClipboardList, Settings, Home } from 'lucide-react';
 
-const Navigation = ({ onNavigate, currentUser }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      await signIn(email, password);
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
-  if (currentUser) {
-    return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Welcome, {currentUser.email}</CardTitle>
-          <CardDescription>Choose an option to begin</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+const Navigation = ({ onNavigate }) => {
+  return (
+    <nav className="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <Home className="h-6 w-6 text-blue-600" />
+          <h1 className="text-lg font-bold text-gray-800">Lola Training</h1>
+        </div>
+        <div className="flex gap-4">
           <Button 
-            className="w-full"
+            className="flex items-center text-md px-4 py-2 transition-all hover:scale-105 hover:bg-blue-700" 
             onClick={() => onNavigate('test')}
           >
+            <ClipboardList className="mr-2 h-5 w-5" />
             Take a Test
           </Button>
-          {currentUser.isAdmin && (
-            <Button 
-              className="w-full"
-              variant="outline"
-              onClick={() => onNavigate('admin')}
-            >
-              Admin Panel
-            </Button>
-          )}
           <Button 
-            className="w-full"
+            className="flex items-center text-md px-4 py-2 border transition-all hover:scale-105 hover:bg-gray-200"
             variant="outline"
-            onClick={handleLogout}
+            onClick={() => onNavigate('admin')}
           >
-            Logout
+            <Settings className="mr-2 h-5 w-5" />
+            Admin Login
           </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Login Required</CardTitle>
-        <CardDescription>Please login to continue</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+    </nav>
   );
 };
 
